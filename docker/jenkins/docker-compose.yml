@@ -16,11 +16,14 @@ services:
     restart: always
     command: >
       bash -c "
-      groupadd -g 999 docker &&
+      if ! getent group docker > /dev/null 2>&1; then groupadd -g 999 docker; fi &&
       usermod -aG docker jenkins &&
       chown root:docker /var/run/docker.sock &&
       chmod 666 /var/run/docker.sock &&
-      curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl &&
-      chmod +x ./kubectl &&
-      mv ./kubectl /usr/local/bin/kubectl &&
-      /usr/local/bin/jenkins.sh"
+      if [ ! -f /usr/local/bin/kubectl ]; then
+        curl -LO https://storage.googleapis.com/kubernetes-release/release/\$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl &&
+        chmod +x ./kubectl &&
+        mv ./kubectl /usr/local/bin/kubectl;
+      fi &&
+      /usr/local/bin/jenkins.sh
+      "
